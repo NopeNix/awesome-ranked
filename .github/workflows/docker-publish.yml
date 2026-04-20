@@ -3,6 +3,7 @@ name: Docker publish
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -22,7 +23,7 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: nopenix
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & push backend
@@ -35,8 +36,6 @@ jobs:
             nopenix/awesome-ranked-backend:latest
             nopenix/awesome-ranked-backend:${{ steps.tags.outputs.ref }}
             nopenix/awesome-ranked-backend:${{ steps.tags.outputs.sha }}
-          build-args: |
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push frontend
         uses: docker/build-push-action@v6
@@ -48,3 +47,5 @@ jobs:
             nopenix/awesome-ranked-frontend:latest
             nopenix/awesome-ranked-frontend:${{ steps.tags.outputs.ref }}
             nopenix/awesome-ranked-frontend:${{ steps.tags.outputs.sha }}
+          build-args: |
+            VITE_API_URL=http://localhost:8001
