@@ -52,6 +52,12 @@ GitHub Actions builds and pushes:
 - `nopenix/awesome-ranked-backend`
 - `nopenix/awesome-ranked-frontend`
 
+## Batch scripts
+
+- `scripts/build.sh` / `scripts/build.bat`
+- `scripts/git-start.sh` / `scripts/git-start.bat`
+- `scripts/docker-hub-downloads.sh` / `scripts/docker-hub-downloads.bat`
+
 ## Notes on “dev/commit counts”
 
 - `contributors_count_approx`: best-effort GraphQL approximation (`repository.contributors.totalCount`)
