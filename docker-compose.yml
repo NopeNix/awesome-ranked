@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: awesome-ranked-db
+    environment:
+      POSTGRES_USER: awesome
+      POSTGRES_PASSWORD: awesome
+      POSTGRES_DB: awesome_ranked
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U awesome -d awesome_ranked"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: nopenix/awesome-ranked-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    container_name: awesome-ranked-api
+    environment:
+      DATABASE_URL: postgresql://awesome:awesome@db:5432/awesome_ranked
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      SCRAPE_SOURCE_URL: ${SCRAPE_SOURCE_URL:-https://raw.githubusercontent.com/awesome-selfhosted/awesome-selfhosted/refs/heads/master/README.md}
+      SCRAPE_INTERVAL_HOURS: ${SCRAPE_INTERVAL_HOURS:-24}
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    image: nopenix/awesome-ranked-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+    container_name: awesome-ranked-frontend
+    environment:
+      VITE_API_URL: http://localhost:8001
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+
+  scheduler:
+    image: nopenix/awesome-ranked-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    container_name: awesome-ranked-scheduler
+    environment:
+      DATABASE_URL: postgresql://awesome:awesome@db:5432/awesome_ranked
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      SCRAPE_SOURCE_URL: ${SCRAPE_SOURCE_URL:-https://raw.githubusercontent.com/awesome-selfhosted/awesome-selfhosted/refs/heads/master/README.md}
+      SCRAPE_INTERVAL_HOURS: ${SCRAPE_INTERVAL_HOURS:-24}
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    command: python scheduler.py
+
+volumes:
+  postgres_data:

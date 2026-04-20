@@ -1,0 +1,48 @@
+name: Docker publish
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set tags
+        id: tags
+        run: |
+          echo "sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+          echo "ref=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            nopenix/awesome-ranked-backend:latest
+            nopenix/awesome-ranked-backend:${{ steps.tags.outputs.ref }}
+            nopenix/awesome-ranked-backend:${{ steps.tags.outputs.sha }}
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            nopenix/awesome-ranked-frontend:latest
+            nopenix/awesome-ranked-frontend:${{ steps.tags.outputs.ref }}
+            nopenix/awesome-ranked-frontend:${{ steps.tags.outputs.sha }}
