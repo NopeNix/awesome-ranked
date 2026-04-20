@@ -35,6 +35,8 @@ jobs:
             nopenix/awesome-ranked-backend:latest
             nopenix/awesome-ranked-backend:${{ steps.tags.outputs.ref }}
             nopenix/awesome-ranked-backend:${{ steps.tags.outputs.sha }}
+          build-args: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push frontend
         uses: docker/build-push-action@v6
