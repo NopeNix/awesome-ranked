@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 
-ARG VITE_API_URL
+ARG VITE_API_URL=http://localhost:8001
 ENV VITE_API_URL=${VITE_API_URL}
 
 # Vite only inlines NEXT_PUBLIC_* at build time; keep it aligned with
